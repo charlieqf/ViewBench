@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>多进程视频播放验证 · 互动原型</title>
+<style>
+:root{--bg:#0d121c;--side:#101623;--panel:#141d2c;--inner:#101826;--line:#283548;--text:#eef3fc;--muted:#9baec7;--blue:#86aafc;--lime:#c9f36b;--green:#78e3b4;--warn:#f4be82;--red:#ff9f9b;font-family:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg);color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;font-size:14px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:default;opacity:.38}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:3px}.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;font-variant-numeric:tabular-nums}.muted{color:var(--muted)}.small{font-size:12px}.app{display:grid;grid-template-columns:214px minmax(0,1fr);min-height:100vh}.sidebar{background:var(--side);border-right:1px solid var(--line);padding:24px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}.brand{display:flex;gap:12px;align-items:center;padding:4px 8px 29px;font-weight:750;font-size:16px}.brand-mark{display:grid;place-items:center;width:36px;height:36px;background:var(--lime);color:#192310;border-radius:9px;font-size:17px}.brand small{display:block;color:var(--muted);font-weight:420;font-size:11px;margin-top:4px}.nav{display:grid;gap:5px}.nav button{border:1px solid transparent;background:none;color:var(--muted);border-radius:7px;text-align:left;padding:12px 10px}.nav button span{display:inline-block;width:26px;color:var(--blue)}.nav button[aria-current]{background:#24334a;border-color:#344765;color:#fff;font-weight:650}.nav button:hover{background:#202d41}.sidebar-foot{margin-top:auto;padding:13px 8px 2px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.8}.topbar{height:56px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 28px;background:#111827;gap:12px}.badge,.pill{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:4px 9px;font-size:11px;font-weight:650;white-space:nowrap}.badge{background:#303820;color:#e0f5a8;border:1px solid #455737}.pill{background:#243248;color:#b8cbee}.pill.ok,.pill.match{background:#173e34;color:#90e7c3}.pill.warn,.pill.diff{background:#433322;color:#ffd19b}.pill.bad{background:#492b34;color:#ffb5b0}.content{max-width:1540px;margin:auto;padding:25px 28px 34px}.heading{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:19px}.heading h1{font-size:30px;letter-spacing:-.6px;line-height:1.12;margin:0 0 8px}.heading p,.sub{margin:0;color:var(--muted);font-size:13px;line-height:1.5}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.button{border:1px solid #34445d;background:#1e2b40;color:var(--text);border-radius:7px;padding:8px 12px;min-height:35px}.button:hover:not(:disabled){background:#2a3a55}.button.primary{background:var(--lime);border-color:var(--lime);color:#1a2610;font-weight:750}.button.primary:hover:not(:disabled){background:#dbfa95}.button.danger{color:#ffbab4}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-width:0}.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}.card-head h2,.card-head h3{font-size:15px;margin:0;line-height:1.4}.config{display:grid;grid-template-columns:minmax(150px,1.6fr) repeat(2,minmax(95px,.7fr)) auto;gap:11px;padding:14px 15px;align-items:end;margin-bottom:13px}.field{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px}.field input,.field select,.filter{border:1px solid #35465e;border-radius:6px;background:#101828;color:var(--text);padding:8px 9px;width:100%;min-height:34px}.field input:read-only{color:#ced9f0}.run-note{margin:0 0 12px;color:var(--muted);font-size:12px}.run-note.error{color:var(--red)}.kpis{display:grid;grid-template-columns:1.35fr repeat(3,1fr);gap:10px;margin-bottom:13px}.kpi{padding:12px 14px;min-height:78px}.kpi .label{font-size:12px;color:var(--muted)}.kpi strong{display:block;font-size:25px;margin-top:4px;line-height:1.15}.kpi strong span{font-size:13px;color:var(--muted);font-weight:500}.kpi:first-child strong{color:var(--lime)}.mini-progress,.progress{overflow:hidden;background:#30415a;border-radius:10px;height:4px}.mini-progress{margin-top:8px}.fill{height:100%;background:var(--lime);border-radius:inherit;transition:width .2s linear}.desk{display:grid;grid-template-columns:minmax(285px,.94fr) minmax(380px,1.3fr);gap:13px;align-items:start}.worker-list{padding:9px;display:grid;gap:6px}.worker{width:100%;border:1px solid #2c3b52;border-radius:8px;background:#172234;color:var(--text);text-align:left;padding:10px}.worker:hover,.worker[aria-pressed=true]{border-color:var(--blue);background:#1b2b45}.worker-top,.worker-data,.preview-info,.event-line{display:flex;align-items:center;justify-content:space-between;gap:8px}.worker-data{margin:7px 0;font-size:11px;color:var(--muted)}.worker .fill{background:var(--blue)}.preview-body{padding:10px 12px 11px}.screen{height:clamp(158px,19vw,248px);background:#0b1220;border-radius:7px;border:1px solid #32425a;position:relative;overflow:hidden}.screen canvas{width:100%;height:100%;display:block}.screen-tag,.screen-time{position:absolute;padding:5px 8px;border-radius:5px;background:#111c2cde;font-size:11px;top:9px}.screen-tag{left:9px;color:#b4c9f3}.screen-time{right:9px;color:#eef4fd}.preview-info{margin:8px 0 7px;color:var(--muted);font-size:11px}.events{margin-top:9px;border-top:1px solid var(--line);padding-top:5px}.event-line{font-size:11px;padding:5px 0;justify-content:flex-start}.event-line .mono{color:var(--muted);min-width:60px}.text-button{border:0;background:none;color:#aac5ff;padding:4px 0;cursor:pointer}.log-top,.monitor-source{padding:13px 15px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.log-top strong{margin-right:auto}.log-top .filter{width:auto}.log-layout{display:grid;grid-template-columns:minmax(310px,1.25fr) minmax(300px,1fr);gap:12px}.table-scroll{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}th,td{padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:550;white-space:nowrap}tbody tr:last-child td{border-bottom:0}.rowpick{cursor:pointer}.rowpick:hover,.rowpick.chosen{background:#213149}.rowpick button{border:0;background:none;color:#b7cdff;padding:0;text-align:left}.inspect{padding:12px}.inspect pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;color:#d2def4;font-size:11px}.inspect th,.inspect td{padding:8px 6px;overflow-wrap:anywhere}.inspect td:first-child{max-width:110px}.inspect td:nth-child(2),.inspect td:nth-child(3){max-width:155px}.monitor-source .field{flex:1 1 300px}.monitor-source .field input{width:100%}.monitor-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:12px}.monitor-grid .kpi strong{font-size:22px;color:var(--text)}.delta{display:block;margin-top:5px;color:var(--green);font-size:11px}.delta.behind{color:var(--warn)}.chart-panel{padding:14px 16px}.chart-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}.chart-controls h2{margin:0;font-size:16px}.chart-wrap{margin-top:10px;position:relative}.chart-wrap canvas{display:block;width:100%;height:250px}.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px}.legend i{display:inline-block;width:11px;height:3px;background:var(--blue);vertical-align:middle;margin-right:6px}.legend .baseline{background:#8d9bab}.hover-read{min-height:20px;color:var(--muted);font-size:12px}.empty{padding:18px;color:var(--muted)}.toast{position:fixed;bottom:19px;right:22px;margin:0;background:#263955;border:1px solid #526b90;color:#fff;border-radius:8px;padding:10px 14px;z-index:10;box-shadow:0 8px 28px #080a12}.toast:empty,[hidden]{display:none!important}
+@media(max-width:1080px){.app{grid-template-columns:174px 1fr}.content{padding:19px 17px}.topbar{padding:0 17px}.config{grid-template-columns:minmax(180px,1.2fr) repeat(2,minmax(76px,.7fr))}.config .run-status{display:none}.desk{grid-template-columns:minmax(240px,1fr) minmax(305px,1.35fr)}.monitor-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:800px){.app{display:block}.sidebar{position:static;height:auto;padding:8px 12px;display:flex;flex-direction:row;align-items:center;gap:8px}.brand{padding:0;min-width:0}.brand small,.sidebar-foot,.nav button span{display:none}.nav{display:flex;margin-left:auto}.nav button{padding:8px 6px}.topbar{height:42px}.heading{align-items:flex-start;flex-direction:column}.desk,.log-layout{grid-template-columns:1fr}.screen{height:210px}.config{grid-template-columns:repeat(3,1fr)}.config .source-field{grid-column:1/-1}.kpis{grid-template-columns:repeat(2,1fr)}.monitor-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:420px){.sidebar .brand{font-size:12px}.brand-mark{width:25px;height:25px}.nav button{font-size:11px}.content{padding:14px 10px}.topbar{padding:0 10px}.heading h1{font-size:24px}.config{gap:7px;padding:10px}.screen{height:160px}}
+.heading.play-heading h1{margin:0}.worker-data{justify-content:flex-end}
+.identity{margin-top:12px;border:1px solid var(--line);border-radius:8px;background:var(--inner);overflow:hidden}
+.identity-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;border-bottom:1px solid var(--line)}
+.identity-head h3{font-size:13px;margin:0}.identity th,.identity td{padding:6px 9px;overflow-wrap:anywhere}
+.identity th:first-child{width:25%}.identity td.new-value{color:var(--green)}.identity td:first-child{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true">▶</span><div>播放验证工作台<small>桌面应用原型</small></div></div>
+  <nav class="nav" aria-label="工作台页面">
+    <button data-page="play" aria-current="page"><span aria-hidden="true">▣</span>播放台</button>
+    <button data-page="logs"><span aria-hidden="true">≡</span>请求审计</button>
+  </nav>
+  <div class="sidebar-foot">界面验收<br><span class="mono">OFFLINE · 1.2</span></div>
+</aside>
+<main>
+<header class="topbar"><span class="muted small" id="breadcrumb">工作台 / 播放台</span><span class="badge">离线模拟</span></header>
+<div class="content">
+<section id="page-play">
+  <div class="heading play-heading"><h1>播放台</h1>
+    <div class="actions"><button class="button" id="reset">重置演示</button><button class="button danger" id="stop" disabled>停止</button><button class="button primary" id="start">启动模拟</button></div>
+  </div>
+  <form class="config card" id="config">
+    <label class="field source-field">测试视频链接<input type="url" class="mono" id="test-link" value="https://playback.test/sample-01" required></label>
+    <label class="field">并发进程<select id="workers"><option selected>2</option><option>3</option><option>4</option></select></label>
+    <label class="field">每路播放次数<input class="mono" value="1" readonly></label>
+    <div class="run-status"><span class="pill" id="runStatus">待启动</span></div>
+  </form>
+  <p id="run-note" class="run-note" role="status">每路各模拟播放一次。链接、IP 和请求日志只用于界面演示。</p>
+  <div class="kpis" id="kpis"></div>
+  <div class="desk">
+    <article class="card"><div class="card-head"><h2>进程</h2><span class="small muted" id="workerCount"></span></div><div class="worker-list" id="workerList"></div></article>
+    <article class="card">
+      <div class="card-head"><h2 id="previewTitle">进程 01 · 播放预览</h2><span class="pill" id="previewStatus"></span></div>
+      <div class="preview-body">
+        <div class="screen"><canvas id="previewCanvas" aria-label="模拟播放器测试画面"></canvas><span class="screen-tag">模拟画面 · SAMPLE 01</span><span class="screen-time mono" id="screenTime"></span></div>
+        <div class="preview-info"><span id="previewMeta"></span><span class="mono">时长 00:06</span></div>
+        <div class="progress" id="previewProgress" role="progressbar" aria-label="播放进度" aria-valuemin="0" aria-valuemax="6"><div class="fill" id="previewFill"></div></div>
+        <div class="events" id="eventList"></div>
+        <div class="actions"><button class="text-button" id="auditSelected">看该进程的请求 →</button><button class="button" id="simulateTimeout" disabled>模拟超时</button></div>
+        <section class="identity" aria-labelledby="identityTitle">
+          <div class="identity-head"><h3 id="identityTitle">本次播放记录</h3><span class="pill" id="identityStatus">等待播放</span></div>
+          <div class="table-scroll" id="identityFields"></div>
+        </section>
+      </div>
+    </article>
+  </div>
+</section>
+<section id="page-logs" hidden>
+  <div class="heading"><div><h1>请求审计</h1><p>按请求 ID 对照浏览器记录、接入层日志和应用日志。</p></div><button class="button" id="exportLogs">导出模拟日志</button></div>
+  <div class="card log-top"><strong>请求记录 <span class="mono muted" id="logCount"></span></strong>
+    <label class="small muted">进程 <select class="filter" id="logWorker" aria-label="按进程筛选"></select></label>
+    <label class="small muted">结果 <select class="filter" id="logResult" aria-label="按结果筛选"><option value="">全部</option><option>一致</option><option>接入层改写</option><option>仅浏览器侧</option></select></label>
+  </div>
+  <div class="log-layout">
+    <article class="card table-scroll"><table><thead><tr><th>请求 ID</th><th>方法与地址</th><th>来源</th><th>比对结果</th></tr></thead><tbody id="logTable"></tbody></table><p id="logEmpty" class="empty" hidden>没有符合条件的记录。</p></article>
+    <article class="card"><div class="card-head"><h2>字段核对</h2><span class="mono small muted" id="logId"></span></div><div class="inspect" id="logDetail"></div></article>
+  </div>
+</section>
+</div>
+</main>
+</div>
+<p class="toast" id="toast" role="status"></p>
+<script>
+'use strict';
+const el = id => document.getElementById(id);
+const DURATION = 6;
+const MAX_WORKERS = 4;
+const pageNames = {play:'播放台',logs:'请求审计'};
+let auditRows = [];
+let page = 'play';
+let chosenWorker = 1;
+let chosenLog = '';
+let toastTimer;
+let state;
+const statusTone = {playing:'ok',idle:'',complete:'ok',stopped:'warn',error:'bad'};
+const statusText = {playing:'播放中',idle:'等待任务',complete:'完播',stopped:'已中止',error:'超时'};
+const resultTone = {'一致':'match','接入层改写':'diff','仅浏览器侧':''};
+const stamp = seconds => '00:' + String(Math.floor(seconds)).padStart(2,'0') + '.' + Math.floor((seconds % 1) * 10);
+const workerName = number => '进程 ' + String(number).padStart(2,'0');
+const badge = (label,tone='') => '<span class="pill ' + tone + '">' + label + '</span>';
+const defaultLink = 'https://playback.test/sample-01';
+const escapeHtml = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function makeWorkers(count) {
+  return Array.from({length:count}, (_, i) => ({
+    id:i+1, done:0, time:0, status:'idle', events:[],
+    identity:{play:'PLAY-'+String(i+1).padStart(3,'0'),ip:'192.0.2.'+(11+i),pid:2401+i}
+  }));
+}
+function resetDemo() {
+  el('workers').value='2'; el('test-link').value=defaultLink;
+  state={config:{count:2,target:2},workers:makeWorkers(2),mode:'ready',fail:0,aborted:0,attempts:0};
+  auditRows=[]; chosenWorker=1; chosenLog='';
+  note('每路各模拟播放一次。链接、IP 和请求日志只用于界面演示。');
+  drawPlay();
+}
+function note(text,error=false) {
+  el('run-note').textContent=text;
+  el('run-note').classList.toggle('error',error);
+}
+function notify(message) {
+  el('toast').textContent=message;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el('toast').textContent='',2900);
+}
+function completed() {return state.workers.reduce((sum,w)=>sum+w.done,0);}
+function inFlight() {return state.workers.filter(w=>w.status==='playing').length;}
+function logEvent(w,event) {
+  const id='R-S'+String(auditRows.length+1).padStart(4,'0');
+  auditRows.unshift({
+    id,worker:w.id,method:'POST',path:'/events/playback',source:'播放器上报',result:'一致',
+    fields:[['event',event,event,'播放器主动'],['play_id',w.identity.play,w.identity.play,'播放器主动'],['position',w.time.toFixed(1),w.time.toFixed(1),'播放器主动'],['来源 IP','未由浏览器填入',w.identity.ip,'接入层观察']]
+  });
+}
+function logResources(w) {
+  const {ip}=w.identity;
+  auditRows.unshift({
+    id:'R-'+w.id+'-PAGE', worker:w.id, method:'GET', path:state.link, source:'页面导航',result:'一致',
+    fields:[['地址',state.link,state.link,'浏览器请求'],['来源 IP','未由浏览器填入',ip,'接入层观察']]
+  },{
+    id:'R-'+w.id+'-MEDIA', worker:w.id,method:'GET',path:'/media/demo.webm',source:'媒体请求',result:'一致',
+    fields:[['Range','bytes=0-','bytes=0-','浏览器自动'],['来源 IP','未由浏览器填入',ip,'接入层观察'],['响应','206 Partial Content','206 Partial Content','服务端响应']]
+  });
+}
+function launch() {
+  if(state.mode==='running')return;
+  let url;
+  try {
+    url=new URL(el('test-link').value.trim());
+    if(url.protocol!=='https:'||url.username||url.password)throw new Error('invalid https');
+  } catch {
+    note('请输入有效的 HTTPS 测试链接。',true);
+    return;
+  }
+  const count=Number(el('workers').value);
+  if(!Number.isInteger(count) || count<2 || count>MAX_WORKERS)return;
+  state={config:{count,target:count},link:url.origin+url.pathname,workers:makeWorkers(count),mode:'running',fail:0,aborted:0,attempts:count};
+  chosenWorker=Math.min(chosenWorker,count);
+  auditRows=[]; chosenLog='';
+  for(const w of state.workers) {
+    w.status='playing';
+    w.events=[[0,'播放器开始播放']];
+    logResources(w);
+    logEvent(w,'playing');
+  }
+  note('离线模拟中。每个进程独立播放一次。');
+  drawPlay();
+}
+function stop() {
+  if(state.mode!=='running')return;
+  for(const w of state.workers) {
+    if(w.status!=='playing')continue;
+    w.status='stopped'; state.aborted+=1; w.events.push([w.time,'手动停止 · 不计完播']); logEvent(w,'stopped');
+  }
+  state.mode='stopped'; note('已停止。保留本轮计数与日志。'); drawPlay();
+}
+function tick() {
+  if(state.mode!=='running')return;
+  for(const w of state.workers) {
+    if(w.status!=='playing')continue;
+    const before=w.time;
+    w.time=Math.min(DURATION,Math.round((w.time+.2)*10)/10);
+    if(before<5&&w.time>=5)w.events.push([5,'看满 5 秒']);
+    if(w.time<DURATION)continue;
+    w.done+=1; w.status='complete'; w.events.push([DURATION,'收到结束事件 · 已计 1 次完播']); logEvent(w,'ended');
+  }
+  if(!inFlight()) {
+    state.mode=completed()===state.config.target?'finished':'partial';
+    note(state.mode==='finished'?'全部进程已自然结束，已完成本轮验证。':'本轮结束，部分进程未确认完播。');
+  }
+  if(page==='play')drawPlay();
+  if(page==='logs'&&auditRows.length!==lastDrawnAuditLength)drawLogs();
+}
+function timeout() {
+  const w=state.workers.find(item=>item.id===chosenWorker);
+  if(!w || w.status!=='playing')return;
+  state.fail+=1; w.status='error'; w.events.push([w.time,'模拟超时 · 不计完播']); logEvent(w,'timeout');
+  notify(workerName(w.id)+' 已模拟超时，不计入完播。');
+  tick();
+}
+function drawPlay() {
+  const active=state.mode==='running';
+  const complete=completed();
+  const current=state.workers.find(w=>w.id===chosenWorker) ?? state.workers[0];
+  const statuses={ready:'待启动',running:'模拟进行中',finished:'全部完播',partial:'部分未完成',stopped:'已停止'};
+  el('runStatus').textContent=statuses[state.mode];
+  el('runStatus').className='pill '+(state.mode==='finished'?'ok':state.mode==='partial'?'warn':'');
+  el('start').textContent=active?'模拟进行中':state.mode==='ready'?'启动模拟':'开始新一轮';
+  el('start').disabled=active;
+  el('stop').disabled=!active;
+  el('workers').disabled=active;
+  el('test-link').disabled=active;
+  el('kpis').innerHTML='<div class="kpi card"><div class="label">成功完播</div><strong class="mono"><span id="doneCount" style="color:inherit;font-size:inherit;font-weight:inherit">'+complete+'</span> <span>/ '+state.config.target+'</span></strong><div class="mini-progress"><div class="fill" style="width:'+(100*complete/state.config.target)+'%"></div></div></div>'+
+    [['播放中',inFlight()],['累计尝试',state.attempts],['失败 / 中止',state.fail+' / '+state.aborted]].map(([label,value])=>'<div class="kpi card"><div class="label">'+label+'</div><strong class="mono">'+value+'</strong></div>').join('');
+  el('workerCount').textContent=state.workers.length+' 路';
+  state.workers.forEach(w=>{
+    let button=el('worker-'+w.id);
+    if(!button){
+      button=document.createElement('button'); button.type='button'; button.id='worker-'+w.id; button.className='worker';
+      button.addEventListener('click',()=>{chosenWorker=w.id;drawPlay();});
+      el('workerList').append(button);
+    }
+    button.setAttribute('aria-pressed',String(w.id===current.id));
+    button.innerHTML='<div class="worker-top"><strong>'+workerName(w.id)+'</strong>'+badge(statusText[w.status],statusTone[w.status])+'</div><div class="worker-data mono"><span>完播 '+w.done+' / 1</span></div><div class="progress"><div class="fill" style="width:'+(100*w.time/DURATION)+'%"></div></div>';
+  });
+  for(const button of el('workerList').querySelectorAll('button')) {
+    if(Number(button.id.split('-')[1])>state.workers.length)button.remove();
+  }
+  el('previewTitle').textContent=workerName(current.id)+' · 播放预览';
+  el('previewStatus').textContent=statusText[current.status];
+  el('previewStatus').className='pill '+statusTone[current.status];
+  el('screenTime').textContent=stamp(current.time);
+  el('previewMeta').textContent=current.identity?'模拟 IP '+current.identity.ip:'等待首条播放记录';
+  el('previewProgress').setAttribute('aria-valuenow',current.time.toFixed(1));
+  el('previewFill').style.width=(100*current.time/DURATION)+'%';
+  el('eventList').innerHTML=current.events.length ? current.events.slice(-3).map(([time,label])=>'<div class="event-line"><span class="mono">'+stamp(time)+'</span><span>'+label+'</span></div>').join('') : '<div class="event-line muted">等待播放器事件</div>';
+  el('simulateTimeout').disabled=current.status!=='playing';
+  drawIdentity(current);
+  paintPreview(current.time);
+}
+function drawIdentity(worker) {
+  const {identity}=worker;
+  el('identityStatus').textContent=worker.status==='complete'?'自然结束':'模拟记录';
+  el('identityStatus').className='pill '+(worker.status==='complete'?'ok':'');
+  el('identityFields').innerHTML='<table><thead><tr><th>字段</th><th>本次播放</th></tr></thead><tbody>'+
+    [['进程 PID',identity.pid],['接入层模拟 IP',identity.ip],['播放 ID',identity.play],['观察结果',statusText[worker.status]]]
+      .map(([label,value])=>'<tr><td>'+label+'</td><td class="mono">'+value+'</td></tr>').join('')+'</tbody></table>';
+}
+function sizeCanvas(canvas) {
+  const rect=canvas.getBoundingClientRect();
+  const scale=Math.min(window.devicePixelRatio||1,2);
+  if(!rect.width||!rect.height)return null;
+  const w=Math.round(rect.width*scale), h=Math.round(rect.height*scale);
+  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+  const context=canvas.getContext('2d');
+  context.setTransform(scale,0,0,scale,0,0);
+  return {context,width:rect.width,height:rect.height};
+}
+function paintPreview(time) {
+  const surface=sizeCanvas(el('previewCanvas'));
+  if(!surface)return;
+  const {context:c,width:w,height:h}=surface;
+  c.fillStyle='#0d1729'; c.fillRect(0,0,w,h);
+  const bars=['#dde6f6','#dec74f','#70cbd4','#7ec78d','#9c76cd','#d57883','#5a7cc7'];
+  const pad=w*.13, bw=(w-2*pad)/bars.length;
+  bars.forEach((color,i)=>{c.fillStyle=color;c.fillRect(pad+i*bw,h*.24,bw+1,h*.38);});
+  c.fillStyle='#111c2d';c.fillRect(pad,h*.62,w-2*pad,h*.12);
+  c.fillStyle='#2b3e5d';c.fillRect(pad,h*.72,w-2*pad,2);
+  c.fillStyle='#c9f36b';c.fillRect(pad+(w-2*pad)*time/DURATION,h*.68,3,h*.09);
+  c.font='11px ui-monospace,monospace';c.fillStyle='#b8cbee';
+  c.textAlign='center';c.fillText('PLAYBACK TEST PATTERN',w/2,h*.87);
+}
+function show(pageId) {
+  page=pageId;
+  for(const key of Object.keys(pageNames))el('page-'+key).hidden=key!==page;
+  for(const button of document.querySelectorAll('[data-page]')) {
+    if(button.dataset.page===page)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+  }
+  el('breadcrumb').textContent='工作台 / '+pageNames[page];
+  if(page==='play')drawPlay();
+  if(page==='logs')drawLogs();
+}
+function filteredLogs() {
+  const worker=el('logWorker').value, result=el('logResult').value;
+  return auditRows.filter(row=>(!worker||row.worker===Number(worker))&&(!result||row.result===result));
+}
+let lastDrawnAuditLength=0;
+function renderFields(record) {
+  return record.fields.map(([field,browser,app,origin])=>{
+    let edge=app;
+    let received=app;
+    if(record.result==='仅浏览器侧'){edge='未收到';received='未收到';}
+    if(origin==='代理转发')edge=browser;
+    if(origin==='接入层观察')received='由接入层观察';
+    return '<tr>'+[field,browser,edge,received,origin].map(value=>'<td>'+escapeHtml(value)+'</td>').join('')+'</tr>';
+  }).join('');
+}
+function drawLogs(workerOverride) {
+  lastDrawnAuditLength=auditRows.length;
+  const previous=workerOverride ?? el('logWorker').value;
+  el('logWorker').innerHTML='<option value="">全部进程</option>'+Array.from({length:state.workers.length},(_,i)=>'<option value="'+(i+1)+'">'+workerName(i+1)+'</option>').join('');
+  el('logWorker').value=previous;
+  const rows=filteredLogs();
+  const selected=rows.find(row=>row.id===chosenLog) ?? rows[0];
+  chosenLog=selected?.id ?? '';
+  el('logCount').textContent=rows.length+' 条';
+  el('logEmpty').hidden=rows.length>0;
+  el('logTable').innerHTML=rows.map(row=>'<tr class="rowpick '+(row.id===chosenLog?'chosen':'')+'" data-request="'+row.id+'"><td><button class="mono">'+row.id+'</button></td><td><span class="mono">'+row.method+'</span><br><span class="mono muted">'+escapeHtml(row.path)+'</span></td><td>'+row.source+'</td><td>'+badge(row.result,resultTone[row.result])+'</td></tr>').join('');
+  el('logId').textContent=chosenLog;
+  el('logDetail').innerHTML=selected?'<div class="actions" style="margin-bottom:9px">'+badge(workerName(selected.worker))+badge(selected.result,resultTone[selected.result])+'</div><div class="table-scroll"><table><thead><tr><th>字段</th><th>浏览器记录</th><th>接入层</th><th>应用日志</th><th>来源</th></tr></thead><tbody>'+renderFields(selected)+'</tbody></table></div>':'<p class="muted small">选择一条请求查看核对结果。</p>';
+}
+function exportLogs() {
+  const rows=filteredLogs();
+  if(!rows.length){notify('当前没有可导出的请求。');return;}
+  const file=new Blob([JSON.stringify({mode:'offline-fixture',video:state.link,records:rows},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(file);
+  const a=document.createElement('a');a.href=url;a.download='模拟请求审计.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  notify('已导出 '+rows.length+' 条模拟请求。');
+}
+for(const button of document.querySelectorAll('[data-page]'))button.addEventListener('click',()=>show(button.dataset.page));
+el('config').addEventListener('submit',e=>{e.preventDefault();launch();});
+el('config').addEventListener('input',()=>note('每路各模拟播放一次。链接、IP 和请求日志只用于界面演示。'));
+el('reset').addEventListener('click',resetDemo);
+el('start').addEventListener('click',launch);
+el('stop').addEventListener('click',stop);
+el('simulateTimeout').addEventListener('click',timeout);
+el('auditSelected').addEventListener('click',()=>{show('logs');el('logResult').value='';drawLogs(String(chosenWorker));});
+el('logWorker').addEventListener('change',()=>drawLogs());
+el('logResult').addEventListener('change',()=>drawLogs());
+el('logTable').addEventListener('click',event=>{const row=event.target.closest('[data-request]');if(row){chosenLog=row.dataset.request;drawLogs();}});
+el('exportLogs').addEventListener('click',exportLogs);
+window.addEventListener('resize',()=>{if(page==='play')drawPlay();});
+resetDemo();
+setInterval(tick,200);
+</script>
+</body>
+</html>
